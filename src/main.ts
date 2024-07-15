@@ -39,10 +39,25 @@ const path = d3.geoPath().projection(projection);
 d3.json('/countries-110m.json').then((topoData: any) => {
   const geoData = topojson.feature(topoData, topoData.objects.countries) as unknown as {features: Country[]};
 
-  // Function to calculate values for each country
-  function calculateValue(country: Country) {
-    return countries[country.properties.name]?.({ income: 60000 })?.percentage ?? 0 ;
+  // // Function to calculate values for each country
+  // function calculateValue(country: Country) {
+  //   return countries[country.properties.name]?.({ income: 60000 })?.percentage ?? 0 ;
+  // }
+
+// Function to calculate values for each country
+function calculateValue(country: Country) {
+  const profile = {
+    income: 80500,  
+    resident: true,
+  };
+
+  // Check if the country has a tax strategy defined
+  if (countries[country.properties.name]) {
+    return countries[country.properties.name](profile)?.percentage ?? 0;
+  } else {
+    return 0;  // Default value if no strategy is defined
   }
+}
 
 
   // Bind values to GeoJSON data
