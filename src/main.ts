@@ -34,31 +34,34 @@ interface Properties {
 
 const path = d3.geoPath().projection(projection);
 
+// Create a color scale
+const colorScale = d3
+  .scaleSequential(d3.interpolateRgb("#96d363", "#b80707"))
+  .domain([0, 0.8]);
+function fill(d: Country) {
+  const value = d.properties.value;
+  return value === undefined ? "#d3d1d1" : colorScale(value);
+}
+
 loadExchangeRates()
   .then(() => {
     d3.json("/countries-110m.json")
       .then((topoData: any) => {
-        const geoData = topojson.feature(topoData, topoData.objects.countries) as unknown as {features: Country[]};
+        const geoData = topojson.feature(
+          topoData,
+          topoData.objects.countries
+        ) as unknown as { features: Country[] };
         geoData.features.forEach((feature: any) => {
           const countryName = feature.properties.name;
           const taxStrategy = countries[countryName];
-          if (taxStrategy) {const taxResult = taxStrategy({ incomeUSD: 200000 }); 
-            feature.properties.value = taxResult.percentage ?? 0;
+          if (taxStrategy) {
+            const taxResult = taxStrategy({ incomeUSD: 75000 });
+            feature.properties.value = taxResult.percentage;
           } else {
             console.error(`No tax strategy found for country ${countryName}`);
             feature.properties.value = 0;
           }
         });
-
-        // // Bind values to GeoJSON data
-        // geoData.features.forEach((feature: any) => {
-        //   feature.properties.value = calculateValue(feature);
-        // });
-
-        // Create a color scale
-        const colorScale = d3
-          .scaleSequential(d3.interpolateBlues)
-          .domain([0, 0.8]);
 
         // Render the countries
         svg
@@ -69,23 +72,19 @@ loadExchangeRates()
           .attr("class", "country")
           // @ts-ignore
           .attr("d", path)
-          .attr("fill", (d: any) => colorScale(d.properties.value))
-          .on("mouseover", function (event: any, d: any) {
+          .attr("fill", fill)
+          .on("mouseover", function (event: MouseEvent, d: Country) {
             d3.select(this).attr("fill", "orange");
             tooltip.transition().duration(200).style("opacity", 0.9);
             tooltip
               .html(
-                `${d.properties.name}<br>Tax rate: ${(
-                  d.properties.value * 100
-                ).toFixed(2)}%`
+                `${d.properties.name}<br>Tax rate: ${formatTaxRate(d.properties.value)}`
               )
               .style("left", event.pageX + "px")
               .style("top", event.pageY - 28 + "px");
           })
-          .on("mouseout", function (d: any) {
-            d3.select(this).attr("fill", (d: any) =>
-              colorScale(d.properties.value)
-            );
+          .on("mouseout", function (_: MouseEvent, d: Country) {
+            d3.select(this).attr("fill", fill(d));
             tooltip.transition().duration(500).style("opacity", 0);
           });
 
@@ -103,3 +102,7 @@ loadExchangeRates()
   .catch((error) => {
     console.error("Error loading exchange rates", error);
   });
+
+function formatTaxRate(rate: number | undefined) {
+  return rate === undefined ? "n/a" : (rate * 100).toFixed(2) + "%";
+}
