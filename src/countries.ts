@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 interface Profile {
 	incomeUSD: number
 }
@@ -7,7 +5,7 @@ interface TaxSummary {
 	percentage: number | undefined
 }
 interface TaxStrategy {
-	(profile: Profile): TaxSummary
+	(profile: Profile, exchangeRates: Record<string, number>): TaxSummary
 }
 
 interface TaxStrategies {
@@ -18,24 +16,9 @@ function defaultTaxStrategy(): TaxSummary {
 	return { percentage: undefined }
 }
 
-let exchangeRates: { [currencyCode: string]: number } = {}
-
-// Exchange Rates
-export function loadExchangeRates(): Promise<void> {
-	return axios
-		.get('https://open.er-api.com/v6/latest/USD')
-		.then((response) => {
-			exchangeRates = response.data.rates
-		})
-		.catch((error) => {
-			console.error('Error fetching exchange rates', error)
-			throw error
-		})
-}
-
 export const countries: TaxStrategies = {
 	//Resident/Non-resident
-	Fiji: (profile) => {
+	Fiji: (profile, exchangeRates) => {
 		const exchangeRateFJD = exchangeRates['FJD'] || 1
 		if (!exchangeRateFJD) {
 			console.error('Exchange rate for FJD is not available.')
@@ -85,7 +68,7 @@ export const countries: TaxStrategies = {
 	Chad: defaultTaxStrategy,
 	Haiti: defaultTaxStrategy,
 	'Dominican Rep.': defaultTaxStrategy,
-	Russia: (profile) => {
+	Russia: (profile, exchangeRates) => {
 		const exchangeRateRUB = exchangeRates['RUB'] || 1
 		if (!exchangeRateRUB) {
 			console.error('Exchange rate for RUB is not available.')
@@ -102,7 +85,7 @@ export const countries: TaxStrategies = {
 	'Falkland Is.': defaultTaxStrategy,
 	//Dual tax base system:
 	//general income and personal income.
-	Norway: (profile) => {
+	Norway: (profile, exchangeRates) => {
 		const exchangeRateNOK = exchangeRates['NOK'] || 1
 		if (!exchangeRateNOK) {
 			console.error('Exchange rate for NOK is not available.')
@@ -134,7 +117,7 @@ export const countries: TaxStrategies = {
 		return { percentage: totalTax / localCurrencyIncome }
 	},
 	// Depends on location
-	Greenland: (profile) => {
+	Greenland: (profile, exchangeRates) => {
 		const exchangeRateDKK = exchangeRates['DKK'] || 1
 		if (!exchangeRateDKK) {
 			console.error('Exchange rate for DKK is not available.')
@@ -234,7 +217,7 @@ export const countries: TaxStrategies = {
 	Iran: defaultTaxStrategy,
 	Syria: defaultTaxStrategy,
 	Armenia: defaultTaxStrategy,
-	Sweden: (profile) => {
+	Sweden: (profile, exchangeRates) => {
 		const exchangeRateSEK = exchangeRates['SEK'] || 1
 		if (!exchangeRateSEK) {
 			console.error('Exchange rate for SEK is not available.')
@@ -263,7 +246,7 @@ export const countries: TaxStrategies = {
 	Germany: defaultTaxStrategy,
 	Bulgaria: defaultTaxStrategy,
 	// Plus Real estate property
-	Greece: (profile) => {
+	Greece: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -289,7 +272,7 @@ export const countries: TaxStrategies = {
 		return { percentage: tax / localCurrencyIncome }
 	},
 	// Depends on the type of income and instruments
-	Turkey: (profile) => {
+	Turkey: (profile, exchangeRates) => {
 		const exchangeRateTRY = exchangeRates['TRY'] || 1
 		if (!exchangeRateTRY) {
 			console.error('Exchange rate for TRY is not available.')
@@ -314,7 +297,7 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Albania: (profile) => {
+	Albania: (profile, exchangeRates) => {
 		const exchangeRateALL = exchangeRates['ALL'] || 1
 		if (!exchangeRateALL) {
 			console.error('Exchange rate for ALL is not available.')
@@ -343,7 +326,7 @@ export const countries: TaxStrategies = {
 		return { percentage: tax / localCurrencyIncome }
 	},
 	// Depends on location
-	Croatia: (profile) => {
+	Croatia: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -362,7 +345,7 @@ export const countries: TaxStrategies = {
 	//Depends on location
 	Switzerland: defaultTaxStrategy,
 	// Single/Married
-	Luxembourg: (profile) => {
+	Luxembourg: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -421,7 +404,7 @@ export const countries: TaxStrategies = {
 		return { percentage: tax / localCurrencyIncome }
 	},
 	//Types of income + Local tax
-	Belgium: (profile) => {
+	Belgium: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -443,7 +426,7 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Netherlands: (profile) => {
+	Netherlands: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -464,7 +447,7 @@ export const countries: TaxStrategies = {
 	},
 	// Deductible amount
 	// Additional solidarity rate after 80 000 and 250 000
-	Portugal: (profile) => {
+	Portugal: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -507,33 +490,41 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Spain: (profile) => {
+	Spain: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
-			console.error('Exchange rate for EUR is not available.')
-			return defaultTaxStrategy()
+			console.error('Exchange rate for EUR is not available.');
+			return defaultTaxStrategy();
 		}
-		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR;
 		let tax = 0
-		if (localCurrencyIncome < 12450) {
-			tax = localCurrencyIncome * 0.19
-		}
-		if (localCurrencyIncome < 20200) {
-			tax = 2365.5 + (localCurrencyIncome - 12450) * 0.24
-		}
-		if (localCurrencyIncome < 35200) {
-			tax = 4225.5 + (localCurrencyIncome - 20200) * 0.3
-		}
-		if (localCurrencyIncome < 60000) {
-			tax = 8725.5 + (localCurrencyIncome - 35200) * 0.37
-		}
-		if (localCurrencyIncome < 300000) {
-			tax = 17901.5 + (localCurrencyIncome - 60000) * 0.45
-		}
-		if (localCurrencyIncome > 300000) {
-			tax = 125901.5 + (localCurrencyIncome - 300000) * 0.47
-		}
-		return { percentage: tax / localCurrencyIncome }
+    const scale: Record<string, number> = {
+      "12450": 0.19,
+      "20200": 0.24,
+      "35200": 0.3,
+      "60000": 0.37,
+      "300000": 0.45,
+      Infinity: 0.47,
+    }
+    function progressiveTax(scale:Record<string, number>, localCurrencyIncome: number){
+      let sum = 0
+      let prevLimit: number = 0
+      for (const [limit, rate] of Object.entries(scale)) {
+        if (Number(limit) < localCurrencyIncome) {
+          sum = sum + rate * (Number(limit) - prevLimit);
+          prevLimit = Number(limit);
+        } else {
+          tax = sum + (localCurrencyIncome - prevLimit) * rate;
+          break;
+        }
+      }  
+    }
+    progressiveTax(scale, localCurrencyIncome);
+    return { percentage: tax / localCurrencyIncome }
+    // for each limit which is less then our income we apply current rate to limit
+    // then sum each of them until reach limit that is more then income
+    // substract previous limit from income and multyply on current rate
+    // result plus sum is total tax
 	},
 	//Married, kids, one or two incomes
 	Ireland: defaultTaxStrategy,
@@ -546,7 +537,7 @@ export const countries: TaxStrategies = {
 	Taiwan: defaultTaxStrategy,
 	//Resident or Non-resident
 	// National income tax, Regional income tax, Municipal income tax.
-	Italy: (profile) => {
+	Italy: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -571,7 +562,7 @@ export const countries: TaxStrategies = {
 	},
 	// Types of income
 	// Used the ordinary tax scheme by up to 52.07%
-	Denmark: (profile) => {
+	Denmark: (profile, exchangeRates) => {
 		const exchangeRateDKK = exchangeRates['DKK'] || 1
 		if (!exchangeRateDKK) {
 			console.error('Exchange rate for DKK is not available.')
@@ -586,7 +577,7 @@ export const countries: TaxStrategies = {
 	},
 	// Types of incomes
 	// In Scotland other taxes
-	'United Kingdom': (profile) => {
+	'United Kingdom': (profile, exchangeRates) => {
 		const exchangeRateGBP = exchangeRates['GBP'] || 1
 		if (!exchangeRateGBP) {
 			console.error('Exchange rate for GBP is not available.')
@@ -608,7 +599,7 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Iceland: (profile) => {
+	Iceland: (profile, exchangeRates) => {
 		const exchangeRateISK = exchangeRates['ISK'] || 1
 		if (!exchangeRateISK) {
 			console.error('Exchange rate for ISK is not available.')
@@ -635,7 +626,7 @@ export const countries: TaxStrategies = {
 	Brunei: defaultTaxStrategy,
 	Slovenia: defaultTaxStrategy,
 	// Local tax, resident/Non-resident
-	Finland: (profile) => {
+	Finland: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -667,7 +658,7 @@ export const countries: TaxStrategies = {
 		return { percentage: totalTax / localCurrencyIncome }
 	},
 	// Types of income
-	Slovakia: (profile) => {
+	Slovakia: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -683,7 +674,7 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Czechia: (profile) => {
+	Czechia: (profile, exchangeRates) => {
 		const exchangeRateCZK = exchangeRates['CZK'] || 1
 		if (!exchangeRateCZK) {
 			console.error('Exchange rate for CZK is not available.')
@@ -717,7 +708,7 @@ export const countries: TaxStrategies = {
 	Rwanda: defaultTaxStrategy,
 	//Small entrepreneurs are taxed at a 2% rate on their total annual revenue,
 	//while foreign-source income is taxed at the prescribed absolute amount.
-	'Bosnia and Herz.': (profile) => {
+	'Bosnia and Herz.': (profile, exchangeRates) => {
 		const exchangeRateBAM = exchangeRates['BAM'] || 1
 		if (!exchangeRateBAM) {
 			console.error('Exchange rate for BAM is not available.')
@@ -730,7 +721,7 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Macedonia: (profile) => {
+	Macedonia: (profile, exchangeRates) => {
 		const exchangeRateMKD = exchangeRates['MKD'] || 1
 		if (!exchangeRateMKD) {
 			console.error('Exchange rate for MKD is not available.')
@@ -746,7 +737,7 @@ export const countries: TaxStrategies = {
 	// Depends on the type of income
 	Serbia: defaultTaxStrategy,
 	// Salary or business. Here is only for salary
-	Montenegro: (profile) => {
+	Montenegro: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')
@@ -765,7 +756,7 @@ export const countries: TaxStrategies = {
 		}
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Kosovo: (profile) => {
+	Kosovo: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR'] || 1
 		if (!exchangeRateEUR) {
 			console.error('Exchange rate for EUR is not available.')

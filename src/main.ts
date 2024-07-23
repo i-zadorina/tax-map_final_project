@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
-import { countries, loadExchangeRates } from './countries'
+import { countries } from './countries'
 
 // Set up the SVG canvas dimensions
 const width = 960
@@ -41,8 +41,21 @@ function fill(d: Country) {
 	return value === undefined ? '#d3d1d1' : colorScale(value)
 }
 
+// Exchange Rates
+export function loadExchangeRates() {
+	return fetch('https://open.er-api.com/v6/latest/USD')
+		.then((response) => {
+			return response.json()
+		})
+		.catch((error) => {
+			console.error('Error fetching exchange rates', error)
+			throw error
+		})
+}
+
+
 loadExchangeRates()
-	.then(() => {
+	.then((exchangeRates) => {
 		d3.json('/countries-110m.json')
 			.then((topoData: any) => {
 				const geoData = topojson.feature(topoData, topoData.objects.countries) as unknown as {
@@ -52,7 +65,7 @@ loadExchangeRates()
 					const countryName = feature.properties.name
 					const taxStrategy = countries[countryName]
 					if (taxStrategy) {
-						const taxResult = taxStrategy({ incomeUSD: 75000 })
+						const taxResult = taxStrategy({ incomeUSD: 75000 }, exchangeRates)
 						feature.properties.value = taxResult.percentage
 					} else {
 						console.error(`No tax strategy found for country ${countryName}`)
