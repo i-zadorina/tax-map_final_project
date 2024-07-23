@@ -53,7 +53,6 @@ export function loadExchangeRates() {
 		})
 }
 
-
 loadExchangeRates()
 	.then((exchangeRates) => {
 		d3.json('/countries-110m.json')
@@ -65,7 +64,7 @@ loadExchangeRates()
 					const countryName = feature.properties.name
 					const taxStrategy = countries[countryName]
 					if (taxStrategy) {
-						const taxResult = taxStrategy({ incomeUSD: 75000 }, exchangeRates)
+						const taxResult = taxStrategy({ incomeUSD: 100000 }, exchangeRates.rates)
 						feature.properties.value = taxResult.percentage
 					} else {
 						console.error(`No tax strategy found for country ${countryName}`)
