@@ -60,22 +60,144 @@ export const countries: TaxStrategies = {
 	},
 	Tanzania: defaultTaxStrategy,
 	'W. Sahara': defaultTaxStrategy,
-	Canada: defaultTaxStrategy,
-	'United States of America': defaultTaxStrategy,
+	// Resident/Non-resident
+	// Types of income
+	// Plus Provincial/territorial tax depending on province
+	// Special tax system in Quebec
+	Canada: (profile, exchangeRates) => {
+		const exchangeRateCAD = exchangeRates['CAD'] || 1
+		if (!exchangeRateCAD) {
+			console.error('Exchange rate for CAD is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD / exchangeRateCAD
+		const tax = progressiveTax(
+			{
+				55867: 0.15,
+				111733: 0.205,
+				173205: 0.26,
+				246752: 0.29,
+				Infinity: 0.33,
+			},
+			localCurrencyIncome
+		)
+		// From 11.5% in Nunavut to 25.75% in Quebec
+		const regIncomeTax = localCurrencyIncome * 0.205 // British Columbia
+		const totalTax = tax + regIncomeTax
+
+		return { percentage: totalTax / localCurrencyIncome }
+	},
+	// Types of income
+	// Plus State and local income taxes
+	// Single/Married
+	// Here is for single taxpayer
+	'United States of America': (profile) => {
+		const tax = progressiveTax(
+			{
+				11000: 0.1,
+				44725: 0.12,
+				95375: 0.22,
+				182100: 0.24,
+				231250: 0.32,
+				578125: 0.35,
+				Infinity: 0.37,
+			},
+			profile.incomeUSD
+		)
+
+		return { percentage: tax / profile.incomeUSD }
+	},
 	Kazakhstan: defaultTaxStrategy,
 	Uzbekistan: defaultTaxStrategy,
 	'Papua New Guinea': defaultTaxStrategy,
 	Indonesia: defaultTaxStrategy,
-	Argentina: defaultTaxStrategy,
-	Chile: defaultTaxStrategy,
+	// Non-residents pay 24.5%
+	Argentina: (profile, exchangeRates) => {
+		const exchangeRateARS = exchangeRates['ARS'] || 1
+		if (!exchangeRateARS) {
+			console.error('Exchange rate for ARS is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD / exchangeRateARS
+		const tax = progressiveTax(
+			{
+				419253.95: 0.05,
+				838507.92: 0.09,
+				1257761.87: 0.12,
+				1677015.87: 0.15,
+				2515523.74: 0.19,
+				3354031.63: 0.23,
+				5031047.45: 0.27,
+				6708063.39: 0.31,
+				Infinity: 0.35,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// Non-residents pay 15%
+	Chile: (profile) => {
+		const tax = progressiveTax(
+			{
+				11368.06: 0,
+				25262.37: 0.04,
+				42103.94: 0.08,
+				58945.52: 0.135,
+				75787.1: 0.23,
+				101049.46: 0.304,
+				260400: 0.355,
+				Infinity: 0.4,
+			},
+			profile.incomeUSD
+		)
+
+		return { percentage: tax / profile.incomeUSD }
+	},
 	'Dem. Rep. Congo': defaultTaxStrategy,
 	Somalia: defaultTaxStrategy,
 	Malta: defaultTaxStrategy,
 	Kenya: defaultTaxStrategy,
 	Sudan: defaultTaxStrategy,
 	Chad: defaultTaxStrategy,
-	Haiti: defaultTaxStrategy,
-	'Dominican Rep.': defaultTaxStrategy,
+	Haiti: (profile, exchangeRates) => {
+		const exchangeRateHTG = exchangeRates['HTG'] || 1
+		if (!exchangeRateHTG) {
+			console.error('Exchange rate for HTG is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateHTG
+		const tax = progressiveTax(
+			{
+				60000: 0,
+				240000: 0.1,
+        480000: 0.15,
+        Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	'Dominican Rep.': (profile, exchangeRates) => {
+		const exchangeRateDOP = exchangeRates['DOP'] || 1
+		if (!exchangeRateDOP) {
+			console.error('Exchange rate for DOP is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateDOP
+		const tax = progressiveTax(
+			{
+				416220: 0,
+				624329: 0.15,
+        867123: 0.2,
+        Infinity: 0.25,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
 	Russia: (profile, exchangeRates) => {
 		const exchangeRateRUB = exchangeRates['RUB'] || 1
 		if (!exchangeRateRUB) {
@@ -93,8 +215,30 @@ export const countries: TaxStrategies = {
 
 		return { percentage: tax / localCurrencyIncome }
 	},
-	Bahamas: defaultTaxStrategy,
-	'Falkland Is.': defaultTaxStrategy,
+  // Income is not taxed in the Bahamas
+	Bahamas: (profile) => {
+		const tax = 0
+		return { percentage: tax }
+	},
+  // Types of income
+	'Falkland Is.': (profile, exchangeRates) => {
+		const exchangeRateFKP = exchangeRates['FKP'] || 1
+		if (!exchangeRateFKP) {
+			console.error('Exchange rate for FKP is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateFKP
+
+		const tax = progressiveTax(
+			{
+				12000: 0.21,
+				Infinity: 0.26,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
 	//Dual tax base system:
 	//general income and personal income
 	Norway: (profile, exchangeRates) => {
@@ -122,7 +266,7 @@ export const countries: TaxStrategies = {
 
 		return { percentage: totalTax / localCurrencyIncome }
 	},
-	// Depends on location
+	// Depends on location from 36% to 44%
 	Greenland: (profile, exchangeRates) => {
 		const exchangeRateDKK = exchangeRates['DKK'] || 1
 		if (!exchangeRateDKK) {
@@ -137,28 +281,444 @@ export const countries: TaxStrategies = {
 	'Fr. S. Antarctic Lands': defaultTaxStrategy,
 	'Timor-Leste': defaultTaxStrategy,
 	'South Africa': defaultTaxStrategy,
-	Lesotho: defaultTaxStrategy,
-	Mexico: defaultTaxStrategy,
-	Uruguay: defaultTaxStrategy,
-	Brazil: defaultTaxStrategy,
-	Bolivia: defaultTaxStrategy,
-	Peru: defaultTaxStrategy,
-	Colombia: defaultTaxStrategy,
-	Panama: defaultTaxStrategy,
-	'Costa Rica': defaultTaxStrategy,
-	Nicaragua: defaultTaxStrategy,
-	Honduras: defaultTaxStrategy,
-	'El Salvador': defaultTaxStrategy,
-	Guatemala: defaultTaxStrategy,
+	// Types of income
+	Lesotho: (profile, exchangeRates) => {
+		const exchangeRateLSL = exchangeRates['LSL'] || 1
+		if (!exchangeRateLSL) {
+			console.error('Exchange rate for LSL is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateLSL
+		const tax = progressiveTax(
+			{
+				69120: 0.2,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// Resident or Non-Resident
+	Mexico: (profile, exchangeRates) => {
+		const exchangeRateMXN = exchangeRates['MXN'] || 1
+		if (!exchangeRateMXN) {
+			console.error('Exchange rate for MXN is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateMXN
+		const tax = progressiveTax(
+			{
+				8952.49: 0.0192,
+				75984.55: 0.064,
+				133536.07: 0.1088,
+				155229.8: 0.16,
+				185852.57: 0.1792,
+				374837.88: 0.2136,
+				590795.99: 0.2352,
+				1127926.84: 0.3,
+				1503902.46: 0.32,
+				4511707.37: 0.34,
+				Infinity: 0.35,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// Resident or Non-Resident
+	// If married not the same
+	Uruguay: (profile, exchangeRates) => {
+		const exchangeRateUYU = exchangeRates['UYU'] || 1
+		if (!exchangeRateUYU) {
+			console.error('Exchange rate for UYU is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateUYU
+		const tax = progressiveTax(
+			{
+				475440: 0,
+				679200: 0.1,
+				1018800: 0.15,
+				2037600: 0.24,
+				3396000: 0.25,
+				5094000: 0.27,
+				7810800: 0.31,
+				Infinity: 0.36,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	Brazil: (profile, exchangeRates) => {
+		const exchangeRateBRL = exchangeRates['BRL'] || 1
+		if (!exchangeRateBRL) {
+			console.error('Exchange rate for BRL is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateBRL
+		const tax = progressiveTax(
+			{
+				6677.55: 0,
+				9922.28: 0.075,
+				13167: 0.15,
+				16380.38: 0.225,
+				Infinity: 0.275,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	Bolivia: (profile, exchangeRates) => {
+		const exchangeRateBOB = exchangeRates['BOB'] || 1
+		if (!exchangeRateBOB) {
+			console.error('Exchange rate for BOB is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateBOB
+		const tax = localCurrencyIncome * 0.13
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// Non-Residents pay 30%
+	// Types of income
+	Peru: (profile, exchangeRates) => {
+		const exchangeRatePEN = exchangeRates['PEN'] || 1
+		if (!exchangeRatePEN) {
+			console.error('Exchange rate for PEN is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRatePEN
+		const tax = progressiveTax(
+			{
+				25750: 0.08,
+				103000: 0.14,
+				180250: 0.17,
+				231750: 0.2,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// Types of income
+	Colombia: (profile, exchangeRates) => {
+		const exchangeRateCOP = exchangeRates['COP'] || 1
+		if (!exchangeRateCOP) {
+			console.error('Exchange rate for COP is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateCOP
+		const tax = progressiveTax(
+			{
+				1090: 0,
+				1700: 0.19,
+				4100: 0.28,
+				8670: 0.33,
+				18970: 0.35,
+				31000: 0.37,
+				Infinity: 0.39,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	Panama: (profile) => {
+		const tax = progressiveTax(
+			{
+				11000: 0,
+				50000: 0.15,
+				Infinity: 0.25,
+			},
+			profile.incomeUSD
+		)
+
+		return { percentage: tax / profile.incomeUSD }
+	},
+	// Non-residents pay 10%
+	// Types of income:
+	// Self-employed individuals and Employed individuals
+	// Here is for Self-employed individuals
+	'Costa Rica': (profile, exchangeRates) => {
+		const exchangeRateCRC = exchangeRates['CRC'] || 1
+		if (!exchangeRateCRC) {
+			console.error('Exchange rate for CRC is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateCRC
+		const tax = progressiveTax(
+			{
+				4181000: 0,
+				6244000: 0.1,
+				10414000: 0.15,
+				20872000: 0.2,
+				Infinity: 0.25,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// Non-residents pay 20%
+	Nicaragua: (profile, exchangeRates) => {
+		const exchangeRateNIO = exchangeRates['NIO'] || 1
+		if (!exchangeRateNIO) {
+			console.error('Exchange rate for NIO is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateNIO
+		const tax = progressiveTax(
+			{
+				100000: 0,
+				200000: 0.15,
+				350000: 0.2,
+				500000: 0.25,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	Honduras: (profile, exchangeRates) => {
+		const exchangeRateHNL = exchangeRates['HNL'] || 1
+		if (!exchangeRateHNL) {
+			console.error('Exchange rate for HNL is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateHNL
+		const tax = progressiveTax(
+			{
+				199039.47: 0,
+				303499.9: 0.15,
+				705813.76: 0.2,
+				Infinity: 0.25,
+			},
+			localCurrencyIncome
+		)
+		const muniIncomeTax = progressiveTax(
+			{
+				5000: 0.015,
+				10000: 0.02,
+				20000: 0.025,
+				30000: 0.03,
+				50000: 0.035,
+				75000: 0.0375,
+				100000: 0.04,
+				150000: 0.05,
+				Infinity: 0.0525,
+			},
+			localCurrencyIncome
+		)
+		const totalTax = tax + muniIncomeTax
+
+		return { percentage: totalTax / localCurrencyIncome }
+	},
+	// Non-residents pay 30%
+	'El Salvador': (profile) => {
+		const tax = progressiveTax(
+			{
+				4064: 0,
+				9142.87: 0.1,
+				22857.14: 0.2,
+				Infinity: 0.3,
+			},
+			profile.incomeUSD
+		)
+
+		return { percentage: tax / profile.incomeUSD }
+	},
+	Guatemala: (profile, exchangeRates) => {
+		const exchangeRateGTQ = exchangeRates['GTQ'] || 1
+		if (!exchangeRateGTQ) {
+			console.error('Exchange rate for GTQ is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateGTQ
+		const tax = progressiveTax(
+			{
+				300000: 0.05,
+				Infinity: 0.07,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	// No information, part of Guatemala?
 	Belize: defaultTaxStrategy,
-	Venezuela: defaultTaxStrategy,
-	Guyana: defaultTaxStrategy,
-	Suriname: defaultTaxStrategy,
-	France: defaultTaxStrategy,
-	Ecuador: defaultTaxStrategy,
-	'Puerto Rico': defaultTaxStrategy,
-	Jamaica: defaultTaxStrategy,
-	Cuba: defaultTaxStrategy,
+	// Non-residents pay 34%
+	Venezuela: (profile, exchangeRates) => {
+		const exchangeRateVES = exchangeRates['VES'] || 1
+		if (!exchangeRateVES) {
+			console.error('Exchange rate for VES is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateVES
+		const tax = progressiveTax(
+			{
+				1000: 0.06,
+				1500: 0.09,
+				2000: 0.12,
+				2500: 0.16,
+				3000: 0.2,
+				4000: 0.24,
+				6000: 0.29,
+				Infinity: 0.34,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	Guyana: (profile, exchangeRates) => {
+		const exchangeRateGYD = exchangeRates['GYD'] || 1
+		if (!exchangeRateGYD) {
+			console.error('Exchange rate for GYD is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateGYD
+		const tax = progressiveTax(
+			{
+				2040000: 0.28,
+				Infinity: 0.4,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+  // Types of income
+	Suriname: (profile, exchangeRates) => {
+		const exchangeRateSRD = exchangeRates['SRD'] || 1
+		if (!exchangeRateSRD) {
+			console.error('Exchange rate for SRD is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateSRD
+		const tax = progressiveTax(
+			{
+				108000: 0,
+				150000: 0.08,
+				192000: 0.18,
+				234000: 0.28,
+				Infinity: 0.38,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+  // Types of income
+  // Depends on Single or Maried plus kids
+  // Here is for Single
+	France: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR'] || 1
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+		const tax = progressiveTax(
+			{
+				10777: 0,
+        27478: 0.11,
+        78570: 0.3,
+        168994: 0.41,
+        Infinity: 0.45,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+	Ecuador: (profile) => {
+		const tax = progressiveTax(
+			{
+				11902: 0,
+				15159: 0.05,
+				19682: 0.1,
+				26031: 0.12,
+				34255: 0.15,
+				45407: 0.2,
+				60450: 0.25,
+				80605: 0.3,
+				107199: 0.35,
+				Infinity: 0.37,
+			},
+			profile.incomeUSD
+		)
+
+		return { percentage: tax / profile.incomeUSD }
+	},
+	'Puerto Rico': (profile) => {
+		const tax = progressiveTax(
+			{
+				9000: 0,
+				25000: 0.07,
+				41500: 0.14,
+				61500: 0.25,
+				Infinity: 0.33,
+			},
+			profile.incomeUSD
+		)
+		const alternateTax = progressiveTax(
+			{
+				25000: 0,
+				50000: 0.01,
+				75000: 0.03,
+				150000: 0.05,
+				250000: 0.1,
+				Infinity: 0.24,
+			},
+			profile.incomeUSD
+		)
+		const totalTax = tax + alternateTax
+		return { percentage: totalTax / profile.incomeUSD }
+	},
+	Jamaica: (profile, exchangeRates) => {
+		const exchangeRateJMD = exchangeRates['JMD'] || 1
+		if (!exchangeRateJMD) {
+			console.error('Exchange rate for JMD is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateJMD
+		const tax = progressiveTax(
+			{
+				1500000: 0,
+				6000000: 0.25,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
+  // No information
+	Cuba: (profile, exchangeRates) => {
+		const exchangeRateCUP = exchangeRates['CUP'] || 1
+		if (!exchangeRateCUP) {
+			console.error('Exchange rate for CUP is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateCUP
+		const tax = progressiveTax(
+			{
+				10500: 0,
+				30000: 0.15,
+				60000: 0.2,
+				90000: 0.3,
+				Infinity: 0.5,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
 	Zimbabwe: defaultTaxStrategy,
 	Botswana: defaultTaxStrategy,
 	Namibia: defaultTaxStrategy,
@@ -260,7 +820,7 @@ export const countries: TaxStrategies = {
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
 
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				10000: 0.09,
 				20000: 0.22,
@@ -282,7 +842,7 @@ export const countries: TaxStrategies = {
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateTRY
 
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				110000: 0.15,
 				230000: 0.2,
@@ -292,10 +852,10 @@ export const countries: TaxStrategies = {
 			},
 			localCurrencyIncome
 		)
-		
+
 		return { percentage: tax / localCurrencyIncome }
 	},
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Albania: (profile, exchangeRates) => {
 		const exchangeRateALL = exchangeRates['ALL'] || 1
 		if (!exchangeRateALL) {
@@ -332,15 +892,15 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    
-    const tax = progressiveTax(
+
+		const tax = progressiveTax(
 			{
 				50400: 0.23,
 				Infinity: 0.35,
 			},
 			localCurrencyIncome
 		)
-		
+
 		return { percentage: tax / localCurrencyIncome }
 	},
 	//Depends on location
@@ -354,12 +914,12 @@ export const countries: TaxStrategies = {
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
 
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				12438: 0,
 				14508: 0.08,
 				16578: 0.09,
-        18648: 0.1,
+				18648: 0.1,
 				20718: 0.11,
 				22788: 0.12,
 				24939: 0.14,
@@ -393,7 +953,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				15820: 0.25,
 				27920: 0.4,
@@ -412,7 +972,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				38098: 0.0932,
 				75518: 0.3697,
@@ -504,7 +1064,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				28000: 0.23,
 				50000: 0.35,
@@ -527,7 +1087,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateDKK
-    const tax = localCurrencyIncome * 0.5207
+		const tax = localCurrencyIncome * 0.5207
 
 		return { percentage: tax / localCurrencyIncome }
 	},
@@ -540,7 +1100,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateGBP
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				17570: 0,
 				50270: 0.2,
@@ -559,7 +1119,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateISK
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				5353634: 0.3148,
 				15030014: 0.3798,
@@ -584,7 +1144,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				20500: 0.1264,
 				30500: 0.19,
@@ -608,7 +1168,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				41445: 0.19,
 				Infinity: 0.25,
@@ -625,19 +1185,37 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateCZK
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				1582812: 0.15,
 				Infinity: 0.23,
 			},
 			localCurrencyIncome
 		)
-		
+
 		return { percentage: tax / localCurrencyIncome }
 	},
 	Eritrea: defaultTaxStrategy,
 	Japan: defaultTaxStrategy,
-	Paraguay: defaultTaxStrategy,
+	// Types of income
+	Paraguay: (profile, exchangeRates) => {
+		const exchangeRatePYG = exchangeRates['PYG'] || 1
+		if (!exchangeRatePYG) {
+			console.error('Exchange rate for PYG is not available.')
+			return defaultTaxStrategy()
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRatePYG
+		const tax = progressiveTax(
+			{
+				50000000: 0.08,
+				150000000: 0.09,
+				Infinity: 0.1,
+			},
+			localCurrencyIncome
+		)
+
+		return { percentage: tax / localCurrencyIncome }
+	},
 	Yemen: defaultTaxStrategy,
 	'Saudi Arabia': defaultTaxStrategy,
 	Antarctica: defaultTaxStrategy,
@@ -661,7 +1239,7 @@ export const countries: TaxStrategies = {
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateBAM
 		const tax = localCurrencyIncome * 0.1
-		
+
 		return { percentage: tax / localCurrencyIncome }
 	},
 	Macedonia: (profile, exchangeRates) => {
@@ -671,7 +1249,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateMKD
-    const tax = localCurrencyIncome * 0.1
+		const tax = localCurrencyIncome * 0.1
 
 		return { percentage: tax / localCurrencyIncome }
 	},
@@ -685,7 +1263,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				700: 0,
 				1000: 0.09,
@@ -693,7 +1271,7 @@ export const countries: TaxStrategies = {
 			},
 			localCurrencyIncome
 		)
-		
+
 		return { percentage: tax / localCurrencyIncome }
 	},
 	Kosovo: (profile, exchangeRates) => {
@@ -703,7 +1281,7 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy()
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-    const tax = progressiveTax(
+		const tax = progressiveTax(
 			{
 				960: 0,
 				3000: 0.04,
