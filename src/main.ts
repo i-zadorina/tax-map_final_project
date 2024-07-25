@@ -53,6 +53,32 @@ export function loadExchangeRates() {
 		})
 }
 
+let tooltipTimeout: number | undefined
+const tooltip = d3.select('#tooltip').on('mouseout', hideTooltip)
+
+function hideTooltip() {
+	tooltip.classed('showing', false).classed('hiding', true)
+
+	tooltipTimeout = window.setTimeout(() => {
+		tooltip.classed('hiding', false)
+	}, 300)
+	// clear selection
+	d3.select('.selected').classed('selected', false)
+}
+
+function showTooltip(props: { el: Element; content: string; x: number; y: number }) {
+	d3.select(props.el).classed('selected', true)
+	// insert html & show before calculating height, because otherwise it will be 0
+	tooltip.html(props.content).classed('showing', true).classed('hiding', false)
+	const tooltipHeight = (tooltip.node() as HTMLElement)?.clientHeight || 0
+	tooltip.style('left', props.x + 'px').style('top', props.y - tooltipHeight + 'px')
+
+	if (tooltipTimeout) {
+		clearTimeout(tooltipTimeout)
+		tooltipTimeout = undefined
+	}
+}
+
 loadExchangeRates()
 	.then((exchangeRates) => {
 		d3.json('/countries-110m.json')
@@ -83,20 +109,21 @@ loadExchangeRates()
 					.attr('d', path)
 					.attr('fill', fill)
 					.on('mouseover', function (event: MouseEvent, d: Country) {
-						d3.select(this).attr('fill', 'orange')
-						tooltip.transition().duration(200).style('opacity', 0.9)
-						tooltip
-							.html(`${d.properties.name}<br>Tax rate: ${formatTaxRate(d.properties.value)}`)
-							.style('left', event.pageX + 'px')
-							.style('top', event.pageY - 28 + 'px')
+						showTooltip({
+							el: this,
+							content: `
+								${d.properties.name}<br />
+								Tax Rate: ${formatTaxRate(d.properties.value)}
+							`,
+							x: event.pageX,
+							y: event.pageY,
+						})
 					})
-					.on('mouseout', function (_: MouseEvent, d: Country) {
-						d3.select(this).attr('fill', fill(d))
-						tooltip.transition().duration(500).style('opacity', 0)
+					.on('mouseout', function (e: MouseEvent) {
+						if (e.relatedTarget !== tooltip.node()) {
+							hideTooltip()
+						}
 					})
-
-				// Add a tooltip
-				const tooltip = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0)
 			})
 			.catch((error) => {
 				console.error('Error loading geographic data', error)
