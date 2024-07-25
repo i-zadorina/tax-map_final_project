@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
-import { countries } from './countries'
+import { countries, TaxSummary } from './countries'
 
 // Set up the SVG canvas dimensions
 const width = 960
@@ -29,7 +29,7 @@ interface Geometry {
 
 interface Properties {
 	name: string
-	value: number
+	taxSummary?: TaxSummary
 }
 
 const path = d3.geoPath().projection(projection)
@@ -37,7 +37,7 @@ const path = d3.geoPath().projection(projection)
 // Create a color scale
 const colorScale = d3.scaleSequential(d3.interpolateRgb('#96d363', '#b80707')).domain([0, 0.8])
 function fill(d: Country) {
-	const value = d.properties.value
+	const value = d.properties.taxSummary?.percentage
 	return value === undefined ? '#d3d1d1' : colorScale(value)
 }
 
@@ -86,15 +86,17 @@ loadExchangeRates()
 				const geoData = topojson.feature(topoData, topoData.objects.countries) as unknown as {
 					features: Country[]
 				}
-				geoData.features.forEach((feature: any) => {
+				geoData.features.forEach((feature) => {
 					const countryName = feature.properties.name
 					const taxStrategy = countries[countryName]
 					if (taxStrategy) {
-						const taxResult = taxStrategy({ incomeUSD: 100000 }, exchangeRates.rates)
-						feature.properties.value = taxResult.percentage
+						const taxResult = taxStrategy(
+							{ incomeUSD: 100000, married: false, oneIncome: true },
+							exchangeRates.rates
+						)
+						feature.properties.taxSummary = taxResult
 					} else {
 						console.error(`No tax strategy found for country ${countryName}`)
-						feature.properties.value = 0
 					}
 				})
 
@@ -108,12 +110,13 @@ loadExchangeRates()
 					// @ts-ignore
 					.attr('d', path)
 					.attr('fill', fill)
-					.on('mouseover', function (event: MouseEvent, d: Country) {
+					.on('mouseover', function (event: MouseEvent, feature: Country) {
 						showTooltip({
 							el: this,
 							content: `
-								${d.properties.name}<br />
-								Tax Rate: ${formatTaxRate(d.properties.value)}
+								${feature.properties.name}<br />
+								Tax Rate: ${formatTaxRate(feature.properties.taxSummary?.percentage)}<br/>
+								${createLink(feature.properties.taxSummary?.link)}
 							`,
 							x: event.pageX,
 							y: event.pageY,
@@ -135,4 +138,9 @@ loadExchangeRates()
 
 function formatTaxRate(rate: number | undefined) {
 	return rate === undefined ? 'n/a' : (rate * 100).toFixed(2) + '%'
+}
+function createLink(link: string | undefined) {
+	if (link) {
+		return `<a href="${link}">More details...</a>`
+	}
 }
