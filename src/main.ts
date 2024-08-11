@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
-import { countries, TaxSummary } from './countries'
+import { countries, TaxSummary, defaultTaxStrategy } from './countries'
 
 // Set up the SVG canvas dimensions
 const width = 960
@@ -54,7 +54,21 @@ export function loadExchangeRates() {
 }
 
 let tooltipTimeout: number | undefined
-const tooltip = d3.select('#tooltip').on('mouseout', hideTooltip)
+// const tooltip = d3.select('#tooltip').on('mouseout', hideTooltip)
+const tooltip = d3
+	.select('#tooltip')
+	.on('mouseover', () => {
+		if (tooltipTimeout) {
+			clearTimeout(tooltipTimeout)
+			tooltipTimeout = undefined
+		}
+	})
+	.on('mouseout', (event: MouseEvent) => {
+		const tooltipElement = tooltip.node() as HTMLElement
+		if (!tooltipElement!.contains(event.relatedTarget as Node)) {
+			hideTooltip()
+		}
+	})
 
 function hideTooltip() {
 	tooltip.classed('showing', false).classed('hiding', true)
@@ -111,19 +125,44 @@ loadExchangeRates()
 					.attr('d', path)
 					.attr('fill', fill)
 					.on('mouseover', function (event: MouseEvent, feature: Country) {
+						const { name, taxSummary } = feature.properties
+						const rate = formatTaxRate(taxSummary?.percentage)
+						const defaultNotice = defaultTaxStrategy().notice;
+						const additionalContent = taxSummary?.link
+							? createLink(taxSummary.link)
+							: defaultNotice
+								? `<p>${defaultNotice}</p>`
+								: ''
+						const content = `
+							${name}<br />
+							Tax Rate: ${rate}<br/>
+							${additionalContent}
+						`
 						showTooltip({
 							el: this,
-							content: `
-								${feature.properties.name}<br />
-								Tax Rate: ${formatTaxRate(feature.properties.taxSummary?.percentage)}<br/>
-								${createLink(feature.properties.taxSummary?.link)}
-							`,
+							content,
 							x: event.pageX,
 							y: event.pageY,
 						})
 					})
 					.on('mouseout', function (e: MouseEvent) {
-						if (e.relatedTarget !== tooltip.node()) {
+						// if (e.relatedTarget !== tooltip.node()) {
+						const tooltipElement = tooltip.node() as HTMLElement
+						if (tooltipElement && !tooltipElement.contains(e.relatedTarget as Node)) {
+							hideTooltip()
+						}
+					})
+				tooltip
+					.selectAll('a')
+					.on('mouseover', () => {
+						if (tooltipTimeout) {
+							clearTimeout(tooltipTimeout)
+							tooltipTimeout = undefined
+						}
+					})
+					.on('mouseout', (e: MouseEvent) => {
+						const tooltipElement = tooltip.node() as HTMLElement
+						if (tooltipElement && !tooltipElement.contains(e.relatedTarget as Node)) {
 							hideTooltip()
 						}
 					})
@@ -141,6 +180,6 @@ function formatTaxRate(rate: number | undefined) {
 }
 function createLink(link: string | undefined) {
 	if (link) {
-		return `<a href="${link}">More details...</a>`
+		return `<a href="${link}" target="_blank" rel="noopener noreferrer">More details...</a>`
 	}
 }
