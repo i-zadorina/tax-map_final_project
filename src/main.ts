@@ -152,20 +152,20 @@ loadExchangeRates()
 							hideTooltip()
 						}
 					})
-				tooltip
-					.selectAll('a')
-					.on('mouseover', () => {
-						if (tooltipTimeout) {
-							clearTimeout(tooltipTimeout)
-							tooltipTimeout = undefined
-						}
-					})
-					.on('mouseout', (e: MouseEvent) => {
-						const tooltipElement = tooltip.node() as HTMLElement
-						if (tooltipElement && !tooltipElement.contains(e.relatedTarget as Node)) {
-							hideTooltip()
-						}
-					})
+				// tooltip
+				// 	.selectAll('a')
+				// 	.on('mouseover', () => {
+				// 		if (tooltipTimeout) {
+				// 			clearTimeout(tooltipTimeout)
+				// 			tooltipTimeout = undefined
+				// 		}
+				// 	})
+				// 	.on('mouseout', (e: MouseEvent) => {
+				// 		const tooltipElement = tooltip.node() as HTMLElement
+				// 		if (tooltipElement && !tooltipElement.contains(e.relatedTarget as Node)) {
+				// 			hideTooltip()
+				// 		}
+				// 	})
 			})
 			.catch((error) => {
 				console.error('Error loading geographic data', error)
