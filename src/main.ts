@@ -105,7 +105,7 @@ loadExchangeRates()
 					const taxStrategy = countries[countryName]
 					if (taxStrategy) {
 						const taxResult = taxStrategy(
-							{ incomeUSD: 100000, married: false, oneIncome: true },
+							{ incomeUSD: 50000, married: false, oneIncome: true },
 							exchangeRates.rates
 						)
 						feature.properties.taxSummary = taxResult
@@ -127,12 +127,15 @@ loadExchangeRates()
 					.on('mouseover', function (event: MouseEvent, feature: Country) {
 						const { name, taxSummary } = feature.properties
 						const rate = formatTaxRate(taxSummary?.percentage)
-						const defaultNotice = defaultTaxStrategy().notice;
-						const additionalContent = taxSummary?.link
-							? createLink(taxSummary.link)
-							: defaultNotice
-								? `<p>${defaultNotice}</p>`
-								: ''
+						const noticeText = taxSummary?.notice
+						let additionalContent = ''
+						if (noticeText) {
+							additionalContent += `<p>${noticeText}</p>`
+						}
+						if (taxSummary?.link) {
+							additionalContent += `<p>${createLink(taxSummary.link)}</p>`
+						}
+
 						const content = `
 							${name}<br />
 							Tax Rate: ${rate}<br/>
@@ -150,7 +153,7 @@ loadExchangeRates()
 						if (tooltipElement && !tooltipElement.contains(e.relatedTarget as Node)) {
 							hideTooltip()
 						}
-					})				
+					})
 			})
 			.catch((error) => {
 				console.error('Error loading geographic data', error)

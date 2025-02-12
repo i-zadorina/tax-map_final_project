@@ -81,6 +81,38 @@ button:focus,
 button:focus-visible {
 	outline: 4px auto -webkit-focus-ring-color;
 }
+.country {
+	stroke: #fff;
+	stroke-width: 0.5;
+}
+
+.tooltip {
+	position: absolute;
+	text-align: center;
+	width: 100px;
+	padding: 0.5em;
+	font: 12px sans-serif;
+	background: lightsteelblue;
+	border: 0px;
+	border-radius: 8px;
+	opacity: 0;
+	transition: opacity 0.3s;
+	display: none;
+}
+
+.tooltip.showing {
+	opacity: 0.8;
+	display: block;
+}
+
+.tooltip.hiding {
+	opacity: 0;
+	display: block;
+}
+
+svg .selected {
+	fill: orange;
+}
 
 @media (prefers-color-scheme: light) {
 	:root {

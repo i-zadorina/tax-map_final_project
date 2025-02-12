@@ -63,7 +63,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/fiji/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Tanzania: (profile, exchangeRates) => {
@@ -86,7 +86,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/tanzania/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	'W. Sahara': () => defaultTaxStrategy('No information'),
@@ -165,7 +165,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/republic-of-uzbekistan/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	'Papua New Guinea': (profile, exchangeRates) => {
@@ -238,7 +238,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/argentina/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	// Non-residents pay 15%
@@ -282,7 +282,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/democratic-republic-of-the-congo/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Somalia: () => defaultTaxStrategy('No information'),
@@ -293,21 +293,36 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy('Exchange rate for EUR is not available.')
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-		const tax = progressiveTax(
-			{
-				9100: 0,
-				14500: 0.15,
-				19500: 0.25,
-				60000: 0.25,
-				Infinity: 0.35,
-			},
-			localCurrencyIncome
-		)
+
+		let tax: number
+		if (profile.married) {
+			tax = progressiveTax(
+				{
+					15000: 0,
+					23000: 0.15,
+					60000: 0.25,
+					Infinity: 0.35,
+				},
+				localCurrencyIncome
+			)
+		} else if (profile.oneIncome) {
+			tax = progressiveTax(
+				{
+					12000: 0,
+					16000: 0.15,
+					60000: 0.25,
+					Infinity: 0.35,
+				},
+				localCurrencyIncome
+			)
+		} else {
+			throw new Error('Impossible to have 2 incomes for single taxpayer')
+		}
 
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/malta/individual/taxes-on-personal-income',
-			notice: 'There are types of income. Depends on marriage and kids. Here is for single.',
+			notice: 'There are types of income taxes. Also depends on marriage and kids.',
 		}
 	},
 	Kenya: (profile, exchangeRates) => {
@@ -331,7 +346,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/kenya/individual/taxes-on-personal-income',
-			notice: 'There are types of income.',
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Sudan: () => defaultTaxStrategy('No information'),
@@ -357,7 +372,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/chad/individual/taxes-on-personal-income',
-			notice: 'There are types of income.',
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Haiti: (profile, exchangeRates) => {
@@ -424,7 +439,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
       2023-2024"`,
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Bahamas: () => {
@@ -456,7 +471,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
       2023-2024"`,
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Norway: (profile, exchangeRates) => {
@@ -516,7 +531,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / profile.incomeUSD,
 			link: 'https://taxsummaries.pwc.com/timor-leste/individual/taxes-on-personal-income',
-			notice: 'There are types of income.',
+			notice: 'There are types of income taxes.',
 		}
 	},
 	'South Africa': (profile, exchangeRates) => {
@@ -563,7 +578,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
       2023-2024"`,
-			notice: 'There are types of income.',
+			notice: 'There are types of income taxes.',
 		}
 	},
 	// Resident or Non-Resident
@@ -604,24 +619,59 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy('Exchange rate for UYU is not available.')
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateUYU
-		const tax = progressiveTax(
-			{
-				475440: 0,
-				679200: 0.1,
-				1018800: 0.15,
-				2037600: 0.24,
-				3396000: 0.25,
-				5094000: 0.27,
-				7810800: 0.31,
-				Infinity: 0.36,
-			},
-			localCurrencyIncome
-		)
+
+		let tax = 0
+		if (profile.married) {
+			if (profile.married) {
+				tax =
+					localCurrencyIncome > 267216
+						? progressiveTax(
+								{
+									11037736: 0,
+									1111860: 0.15,
+									2223720: 0.24,
+									3706200: 0.25,
+									5559300: 0.27,
+									8524260: 0.31,
+									Infinity: 0.36,
+								},
+								localCurrencyIncome
+							)
+						: progressiveTax(
+								{
+									592992: 0,
+									889488: 0.1,
+									1111860: 0.15,
+									2223720: 0.24,
+									3706200: 0.25,
+									5559300: 0.27,
+									8524260: 0.31,
+									Infinity: 0.36,
+								},
+								localCurrencyIncome
+							)
+			}
+		} else if (profile.oneIncome) {
+			tax = progressiveTax(
+				{
+					518868: 0,
+					741240: 0.1,
+					1111860: 0.15,
+					2223720: 0.24,
+					3706200: 0.25,
+					5559300: 0.27,
+					8524260: 0.31,
+					Infinity: 0.36,
+				},
+				localCurrencyIncome
+			)
+		} else {
+			throw new Error('Impossible to have 2 incomes for single taxpayer')
+		}
 
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/uruguay/individual/taxes-on-personal-income',
-			notice: 'Depends on marriage. Here is for single.',
 		}
 	},
 	Brazil: (profile, exchangeRates) => {
@@ -683,7 +733,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/peru/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Colombia: (profile, exchangeRates) => {
@@ -709,7 +759,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/colombia/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Panama: (profile) => {
@@ -750,7 +800,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/costa-rica/individual/taxes-on-personal-income',
 			notice:
-				'There are types of income: self-employed individuals and employed individuals. Here is for self-employed individuals',
+				'There are types of income taxes: self-employed individuals and employed individuals. Here is for self-employed individuals',
 		}
 	},
 	// Non-residents pay 20%
@@ -923,7 +973,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
       2023-2024"`,
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	France: (profile, exchangeRates) => {
@@ -933,21 +983,71 @@ export const countries: TaxStrategies = {
 			return defaultTaxStrategy('Exchange rate for EUR is not available.')
 		}
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
-		const tax = progressiveTax(
-			{
-				10777: 0,
-				27478: 0.11,
-				78570: 0.3,
-				168994: 0.41,
-				Infinity: 0.45,
-			},
-			localCurrencyIncome
-		)
+		let tax: number
+		if (profile.married) {
+			tax = progressiveTax(
+				{
+					35000: 0.216,
+					40000: 0.215,
+					45000: 0.225,
+					50000: 0.234,
+					55000: 0.243,
+					60000: 0.252,
+					65000: 0.261,
+					70000: 0.27,
+					75000: 0.279,
+					80000: 0.288,
+					85000: 0.297,
+					90000: 0.306,
+					95000: 0.315,
+					100000: 0.324,
+					105000: 0.333,
+					110000: 0.342,
+					120000: 0.351,
+					150000: 0.369,
+					200000: 0.39,
+					250000: 0.41,
+					300000: 0.42,
+					Infinity: 0.45,
+				},
+				localCurrencyIncome
+			)
+		} else if (profile.oneIncome) {
+			tax = progressiveTax(
+				{
+					35000: 0.26,
+					40000: 0.276,
+					45000: 0.293,
+					50000: 0.306,
+					55000: 0.316,
+					60000: 0.325,
+					65000: 0.333,
+					70000: 0.34,
+					75000: 0.347,
+					80000: 0.353,
+					85000: 0.359,
+					90000: 0.364,
+					95000: 0.369,
+					100000: 0.373,
+					105000: 0.377,
+					110000: 0.381,
+					120000: 0.388,
+					150000: 0.407,
+					200000: 0.43,
+					250000: 0.45,
+					300000: 0.45,
+					Infinity: 0.45,
+				},
+				localCurrencyIncome
+			)
+		} else {
+			throw new Error('Impossible to have 2 incomes for single taxpayer')
+		}
 
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/france/individual/taxes-on-personal-income',
-			notice: 'There are types of income. Depends on marriage and kids. Here is for Single',
+			notice: 'There are types of income taxes. Also depends on marriage and kids.',
 		}
 	},
 	Ecuador: (profile) => {
@@ -1063,8 +1163,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: totalTax / profile.incomeUSD,
 			link: 'https://taxsummaries.pwc.com/zimbabwe/individual/taxes-on-personal-income',
-			notice:
-				'There are types of income.',
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Botswana: (profile, exchangeRates) => {
@@ -1113,7 +1212,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/republic-of-namibia/individual/taxes-on-personal-income',
-			notice: 'There are types of income.'
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Senegal: (profile, exchangeRates) => {
@@ -1139,7 +1238,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/senegal/individual/taxes-on-personal-income',
-			notice: 'There are types of income.'
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Mali: () => defaultTaxStrategy('No information'),
@@ -1163,7 +1262,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/mauritania/individual/taxes-on-personal-income',
-			notice: 'There are types of income.'
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Benin: () => defaultTaxStrategy('No information'),
@@ -1190,7 +1289,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/nigeria/individual/taxes-on-personal-income',
-			notice: 'There are few types of income.'
+			notice: 'There are few types of income.',
 		}
 	},
 	Cameroon: (profile, exchangeRates) => {
@@ -1239,11 +1338,9 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/ghana/individual/taxes-on-personal-income',
-			notice: 'There are types of income.'
+			notice: 'There are types of income taxes.',
 		}
 	},
-	//  !!!!!!! different formula
-	// https://taxsummaries.pwc.com/ivory-coast/individual/taxes-on-personal-income
 	"Côte d'Ivoire": (profile, exchangeRates) => {
 		const exchangeRateXOF = exchangeRates['XOF']
 		if (!exchangeRateXOF) {
@@ -1253,14 +1350,12 @@ export const countries: TaxStrategies = {
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateXOF
 		const tax = progressiveTax(
 			{
-				300000: 0,
-				547000: 0.1,
-				979000: 0.15,
-				1519000: 0.2,
-				2644000: 0.25,
-				4669000: 0.35,
-				10106000: 0.45,
-				Infinity: 0.6,
+				75000: 0,
+				240000: 0.16,
+				800000: 0.21,
+				2400000: 0.24,
+				8000000: 0.28,
+				Infinity: 0.32,
 			},
 			localCurrencyIncome
 		)
@@ -1293,7 +1388,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
       2023-2024"`,
-			notice: 'There are types of income.'
+			notice: 'There are types of income taxes.',
 		}
 	},
 	'Guinea-Bissau': () => defaultTaxStrategy('No information'),
@@ -1472,7 +1567,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/angola/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Burundi: () => defaultTaxStrategy('No information'),
@@ -1499,7 +1594,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/israel/individual/taxes-on-personal-income',
-			notice: "Depends on marriage, kids, etc. There are types of income."
+			notice: 'Depends on marriage, kids, etc. There are types of income taxes.',
 		}
 	},
 	Lebanon: (profile, exchangeRates) => {
@@ -1524,7 +1619,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/lebanon/individual/taxes-on-personal-income',
-			notice: "Depends on marriage, kids, etc. There are types of income."
+			notice: 'Depends on marriage, kids, etc. There are types of income taxes.',
 		}
 	},
 	Madagascar: (profile, exchangeRates) => {
@@ -1548,7 +1643,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/madagascar/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Palestine: (profile, exchangeRates) => {
@@ -1571,7 +1666,7 @@ export const countries: TaxStrategies = {
 			percentage: tax / localCurrencyIncome,
 			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
 			2023-2024"`,
-			notice: "There are types of income and payments"
+			notice: 'There are types of income taxes and payments',
 		}
 	},
 	Gambia: () => defaultTaxStrategy('No information'),
@@ -1596,7 +1691,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/tunisia/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Algeria: (profile, exchangeRates) => {
@@ -1668,7 +1763,7 @@ export const countries: TaxStrategies = {
 			percentage: tax,
 			link: 'https://taxsummaries.pwc.com/qatar/individual/taxes-on-personal-income',
 			notice: `Income tax is not imposed on employed individuals' salaries, wages, and allowances.
-			There are types of income`,
+			There are types of income taxes`,
 		}
 	},
 	Kuwait: () => {
@@ -1732,7 +1827,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/cambodia/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	Thailand: (profile, exchangeRates) => {
@@ -1783,11 +1878,12 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/lao-pdr/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	// https://taxsummaries.pwc.com/myanmar/individual/taxes-on-personal-income
-	Myanmar: () => defaultTaxStrategy(`There is no exact information.
+	Myanmar: () =>
+		defaultTaxStrategy(`There is no exact information.
 		Progressive rates from 1% to 25% with personal tax relief available.`),
 	Vietnam: (profile, exchangeRates) => {
 		const exchangeRateVND = exchangeRates['VND']
@@ -1812,7 +1908,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/vietnam/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	'North Korea': () => defaultTaxStrategy('No information'),
@@ -1825,34 +1921,42 @@ export const countries: TaxStrategies = {
 		const localCurrencyIncome = profile.incomeUSD * exchangeRateKRW
 		const tax = progressiveTax(
 			{
-				14000: 0.06,
-				50000: 0.15,
-				88000: 0.24,
-				150000: 0.35,
-				300000: 0.38,
-				500000: 0.4,
-				1000000: 0.42,
+				14000000: 0.06,
+				50000000: 0.15,
+				88000000: 0.24,
+				150000000: 0.35,
+				300000000: 0.38,
+				500000000: 0.4,
+				1000000000: 0.42,
 				Infinity: 0.45,
 			},
 			localCurrencyIncome
 		)
 		const localTax = progressiveTax(
 			{
-				14000: 0.006,
-				50000: 0.015,
-				88000: 0.024,
-				150000: 0.035,
-				300000: 0.038,
-				500000: 0.04,
-				1000000: 0.042,
+				14000000: 0.006,
+				50000000: 0.015,
+				88000000: 0.024,
+				150000000: 0.035,
+				300000000: 0.038,
+				500000000: 0.04,
+				1000000000: 0.042,
 				Infinity: 0.045,
 			},
 			localCurrencyIncome
 		)
 		const totalTax = tax + localTax
-		return {
-			percentage: totalTax / localCurrencyIncome,
-			link: 'https://taxsummaries.pwc.com/republic-of-korea/individual/taxes-on-personal-income',
+
+		if (totalTax > 45) {
+			return {
+				percentage: 0.45,
+				link: 'https://taxsummaries.pwc.com/republic-of-korea/individual/taxes-on-personal-income',
+			}
+		} else {
+			return {
+				percentage: totalTax / localCurrencyIncome,
+				link: 'https://taxsummaries.pwc.com/republic-of-korea/individual/taxes-on-personal-income',
+			}
 		}
 	},
 	// 20% for non-residents
@@ -1875,7 +1979,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/mongolia/individual/taxes-on-personal-income',
-			notice: "There are types of income."
+			notice: 'There are types of income taxes.',
 		}
 	},
 	India: (profile, exchangeRates) => {
@@ -1910,7 +2014,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: totalTax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/india/individual/taxes-on-personal-income',
-			notice: "There are types of income, taxes and rebates."
+			notice: 'There are types of income, taxes and rebates.',
 		}
 	},
 	Bangladesh: () => defaultTaxStrategy('No information'),
@@ -2021,21 +2125,229 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/sweden/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
-	Belarus: defaultTaxStrategy,
-	Ukraine: defaultTaxStrategy,
-	Poland: defaultTaxStrategy,
-	Austria: defaultTaxStrategy,
-	Hungary: defaultTaxStrategy,
-	Moldova: defaultTaxStrategy,
-	Romania: defaultTaxStrategy,
-	Lithuania: defaultTaxStrategy,
-	Latvia: defaultTaxStrategy,
-	Estonia: defaultTaxStrategy,
-	Germany: defaultTaxStrategy,
-	Bulgaria: defaultTaxStrategy,
+	Belarus: () => defaultTaxStrategy('No information'),
+	Ukraine: (profile, exchangeRates) => {
+		const exchangeRateUAH = exchangeRates['UAH']
+		if (!exchangeRateUAH) {
+			console.error('Exchange rate for UAH is not available.')
+			return defaultTaxStrategy('Exchange rate for UAH is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateUAH
+		const tax = localCurrencyIncome * 0.18
+		const militaryTax = localCurrencyIncome * 0.015
+		const totalTax = tax + militaryTax
+		return {
+			percentage: totalTax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/ukraine/individual/taxes-on-personal-income',
+		}
+	},
+	Poland: (profile, exchangeRates) => {
+		const exchangeRatePLN = exchangeRates['PLN']
+		if (!exchangeRatePLN) {
+			console.error('Exchange rate for PLN is not available.')
+			return defaultTaxStrategy('Exchange rate for PLN is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRatePLN
+		const tax = progressiveTax(
+			{
+				30000: 0,
+				120000: 0.12,
+				Infinity: 0.32,
+			},
+			localCurrencyIncome
+		)
+		const solidarityTax = progressiveTax(
+			{
+				1000000: 0,
+				Infinity: 0.04,
+			},
+			localCurrencyIncome
+		)
+		const totalTax = tax + solidarityTax
+		return {
+			percentage: totalTax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/poland/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes.',
+		}
+	},
+	Austria: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+
+		const tax = progressiveTax(
+			{
+				13308: 0,
+				21617: 0.2,
+				35836: 0.3,
+				69166: 0.4,
+				103072: 0.48,
+				1000000: 0.5,
+				Infinity: 0.55,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/austria/individual/taxes-on-personal-income',
+		}
+	},
+	Hungary: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+		const tax = localCurrencyIncome * 0.15
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/hungary/individual/taxes-on-personal-income',
+			notice: 'There are types of benefits and tax allowances.',
+		}
+	},
+	Moldova: (profile, exchangeRates) => {
+		const exchangeRateMDL = exchangeRates['MDL']
+		if (!exchangeRateMDL) {
+			console.error('Exchange rate for MDL is not available.')
+			return defaultTaxStrategy('Exchange rate for MDL is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateMDL
+		const tax = localCurrencyIncome * 0.12
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/hungary/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes.',
+		}
+	},
+	Romania: (profile, exchangeRates) => {
+		const exchangeRateRON = exchangeRates['RON']
+		if (!exchangeRateRON) {
+			console.error('Exchange rate for RON is not available.')
+			return defaultTaxStrategy('Exchange rate for RON is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateRON
+		const tax = localCurrencyIncome * 0.1
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/hungary/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes.',
+		}
+	},
+	Lithuania: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+
+		const tax = progressiveTax(
+			{
+				126532: 0.2,
+				Infinity: 0.32,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/lithuania/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes.',
+		}
+	},
+	Latvia: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+
+		const tax = progressiveTax(
+			{
+				105300: 0.255,
+				Infinity: 0.33,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/latvia/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes.',
+		}
+	},
+	Estonia: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+
+		const tax = localCurrencyIncome * 0.2
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/estonia/individual/taxes-on-personal-income',
+		}
+	},
+	Germany: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+		let tax = 0
+
+		const taxFreeAllowance = profile.married ? 24192 : 12096
+		const taxableIncome = Math.max(0, localCurrencyIncome - taxFreeAllowance)
+
+		if (taxableIncome > 0) {
+			if (taxableIncome <= (profile.married ? 136858 : 68429)) {
+				tax = (taxableIncome - (profile.married ? 24192 : 12096)) * 0.14
+			} else if (taxableIncome <= (profile.married ? 555650 : 277825)) {
+				tax =
+					(taxableIncome - (profile.married ? 136858 : 68430)) * 0.42 +
+					((profile.married ? 136858 : 68430) - (profile.married ? 24192 : 12096)) * 0.14
+			} else {
+				tax =
+					(taxableIncome - (profile.married ? 555650 : 277825)) * 0.45 +
+					((profile.married ? 555650 : 277825) - (profile.married ? 136858 : 68430)) * 0.42 +
+					((profile.married ? 136858 : 68430) - (profile.married ? 24192 : 12096)) * 0.14
+			}
+		}
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/germany/individual/taxes-on-personal-income',
+		}
+	},
+	Bulgaria: (profile, exchangeRates) => {
+		const exchangeRateBGN = exchangeRates['BGN']
+		if (!exchangeRateBGN) {
+			console.error('Exchange rate for BGN is not available.')
+			return defaultTaxStrategy('Exchange rate for BGN is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateBGN
+
+		const tax = localCurrencyIncome * 0.1
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/bulgaria/individual/taxes-on-personal-income',
+		}
+	},
 	Greece: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR']
 		if (!exchangeRateEUR) {
@@ -2204,7 +2516,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/belgium/individual/taxes-on-personal-income',
-			notice: 'There are types of income and additional local tax',
+			notice: 'There are types of income taxes and additional local tax',
 		}
 	},
 	Netherlands: (profile, exchangeRates) => {
@@ -2226,7 +2538,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/netherlands/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	// Resident or Non-resident
@@ -2288,12 +2600,8 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/spain/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
-		// for each limit which is less then our income we apply current rate to limit
-		// then sum each of them until reach limit that is more then income
-		// substract previous limit from income and multyply on current rate
-		// result plus sum is total tax
 	},
 	Ireland: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR']
@@ -2340,13 +2648,161 @@ export const countries: TaxStrategies = {
 			link: 'https://taxsummaries.pwc.com/ireland/individual/taxes-on-personal-income',
 		}
 	},
-	'New Caledonia': defaultTaxStrategy,
-	'Solomon Is.': defaultTaxStrategy,
-	'New Zealand': defaultTaxStrategy,
-	Australia: defaultTaxStrategy,
-	'Sri Lanka': defaultTaxStrategy,
-	China: defaultTaxStrategy,
-	Taiwan: defaultTaxStrategy,
+	'New Caledonia': (profile, exchangeRates) => {
+		const exchangeRateXPF = exchangeRates['XPF']
+		if (!exchangeRateXPF) {
+			console.error('Exchange rate for XPF is not available.')
+			return defaultTaxStrategy('Exchange rate for XPF is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateXPF
+		const tax = progressiveTax(
+			{
+				1000000: 0,
+				1800000: 0.04,
+				3000000: 0.12,
+				4500000: 0.25,
+				Infinity: 0.4,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/new-caledonia/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	'Solomon Is.': () => defaultTaxStrategy('No information'),
+	'New Zealand': (profile, exchangeRates) => {
+		const exchangeRateNZD = exchangeRates['NZD']
+		if (!exchangeRateNZD) {
+			console.error('Exchange rate for NZD is not available.')
+			return defaultTaxStrategy('Exchange rate for NZD is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateNZD
+		const tax = progressiveTax(
+			{
+				15600: 0.105,
+				53500: 0.175,
+				78100: 0.3,
+				180000: 0.33,
+				Infinity: 0.39,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/new-zealand/individual/taxes-on-personal-income',
+		}
+	},
+	Australia: (profile, exchangeRates) => {
+		const exchangeRateAUD = exchangeRates['AUD']
+		if (!exchangeRateAUD) {
+			console.error('Exchange rate for AUD is not available.')
+			return defaultTaxStrategy('Exchange rate for AUD is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateAUD
+		const tax = progressiveTax(
+			{
+				18200: 0,
+				45000: 0.16,
+				135000: 0.3,
+				190000: 0.37,
+				Infinity: 0.45,
+			},
+			localCurrencyIncome
+		)
+
+		const medicareTax = localCurrencyIncome * 0.02
+		const totalTax = tax + medicareTax
+
+		return {
+			percentage: totalTax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/australia/individual/taxes-on-personal-income',
+			notice: 'There are offsets for those with taxable income up to AUD 66,667',
+		}
+	},
+	//Resident or Non-resident
+	'Sri Lanka': (profile, exchangeRates) => {
+		const exchangeRateLKR = exchangeRates['LKR']
+		if (!exchangeRateLKR) {
+			console.error('Exchange rate for LKR is not available.')
+			return defaultTaxStrategy('Exchange rate for LKR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateLKR
+		const tax = progressiveTax(
+			{
+				500000: 0.06,
+				1000000: 0.12,
+				1500000: 0.18,
+				2000000: 0.24,
+				2500000: 0.3,
+				Infinity: 0.36,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://quickbooks.intuit.com/global/tax-tables/sri-lanka-tax-tables/',
+			notice: 'There are types of income taxes',
+		}
+	},
+	//Resident or Non-resident
+	China: (profile, exchangeRates) => {
+		const exchangeRateCNY = exchangeRates['CNY']
+		if (!exchangeRateCNY) {
+			console.error('Exchange rate for CNY is not available.')
+			return defaultTaxStrategy('Exchange rate for CNY is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateCNY
+		const tax = progressiveTax(
+			{
+				36000: 0.03,
+				144000: 0.1,
+				300000: 0.2,
+				420000: 0.25,
+				660000: 0.3,
+				960000: 0.35,
+				Infinity: 0.45,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/peoples-republic-of-china/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	//Resident or Non-resident
+	Taiwan: (profile, exchangeRates) => {
+		const exchangeRateTWD = exchangeRates['TWD']
+		if (!exchangeRateTWD) {
+			console.error('Exchange rate for TWD is not available.')
+			return defaultTaxStrategy('Exchange rate for TWD is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateTWD
+		const tax = progressiveTax(
+			{
+				560000: 0.05,
+				1260000: 0.12,
+				2520000: 0.2,
+				4720000: 0.3,
+				Infinity: 0.4,
+			},
+			localCurrencyIncome
+		)
+		const incomeBasicTax = localCurrencyIncome * 0.02
+		const totalTax = tax + incomeBasicTax
+
+		return {
+			percentage: totalTax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/taiwan/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
 	//Resident or Non-resident
 	Italy: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR']
@@ -2386,7 +2842,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/denmark/individual/taxes-on-personal-income',
-			notice: 'Used the ordinary tax scheme by up to 52.07%. There are types of incomes',
+			notice: 'Used the ordinary tax scheme by up to 52.07%. There are types of income taxess',
 		}
 	},
 	'United Kingdom': (profile, exchangeRates) => {
@@ -2409,7 +2865,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/united-kingdom/individual/taxes-on-personal-income',
-			notice: 'Scotland has other taxes. There are types of incomes',
+			notice: 'Scotland has other taxes. There are types of income taxess',
 		}
 	},
 	Iceland: (profile, exchangeRates) => {
@@ -2431,15 +2887,156 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/iceland/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
-	Azerbaijan: defaultTaxStrategy,
-	Georgia: defaultTaxStrategy,
-	Philippines: defaultTaxStrategy,
-	Malaysia: defaultTaxStrategy,
-	Brunei: defaultTaxStrategy,
-	Slovenia: defaultTaxStrategy,
+	Azerbaijan: (profile, exchangeRates) => {
+		const exchangeRateAZN = exchangeRates['AZN']
+		if (!exchangeRateAZN) {
+			console.error('Exchange rate for AZN is not available.')
+			return defaultTaxStrategy('Exchange rate for AZN is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateAZN
+		const tax = progressiveTax(
+			{
+				8000: 0,
+				Infinity: 0.14,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/azerbaijan/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	Georgia: (profile, exchangeRates) => {
+		const exchangeRateGEL = exchangeRates['GEL']
+		if (!exchangeRateGEL) {
+			console.error('Exchange rate for GEL is not available.')
+			return defaultTaxStrategy('Exchange rate for GEL is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateGEL
+		const tax = progressiveTax(
+			{
+				30000: 0,
+				Infinity: 0.2,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/georgia/individual/taxes-on-personal-income',
+			notice:
+				'Individual entrepreneurs with annual turnover of less than GEL 500,000 may register as a small business and pay 1% tax on their turnover. The rate increases to 3% if annual turnover will exceed GEL 500,000',
+		}
+	},
+	Philippines: (profile, exchangeRates) => {
+		const exchangeRatePHP = exchangeRates['PHP']
+		if (!exchangeRatePHP) {
+			console.error('Exchange rate for PHP is not available.')
+			return defaultTaxStrategy('Exchange rate for PHP is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRatePHP
+		const tax = progressiveTax(
+			{
+				250000: 0,
+				400000: 0.15,
+				800000: 0.2,
+				2000000: 0.25,
+				8000000: 0.3,
+				Infinity: 0.35,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/philippines/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	// Resident/Non-resident
+	Malaysia: (profile, exchangeRates) => {
+		const exchangeRateMYR = exchangeRates['MYR']
+		if (!exchangeRateMYR) {
+			console.error('Exchange rate for MYR is not available.')
+			return defaultTaxStrategy('Exchange rate for MYR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateMYR
+		const tax = progressiveTax(
+			{
+				5000: 0,
+				20000: 0.01,
+				35000: 0.03,
+				50000: 0.06,
+				70000: 0.11,
+				100000: 0.19,
+				400000: 0.25,
+				600000: 0.26,
+				2000000: 0.28,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/malaysia/individual/taxes-on-personal-income',
+			notice: 'A qualified persons is taxed at the rate of 15%.',
+		}
+	},
+	Brunei: (profile, exchangeRates) => {
+		const exchangeRateBND = exchangeRates['BND']
+		if (!exchangeRateBND) {
+			console.error('Exchange rate for BND is not available.')
+			return defaultTaxStrategy('Exchange rate for BND is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateBND
+		const tax = progressiveTax(
+			{
+				500: 0.115,
+				1500: 0.105,
+				2800: 0.095,
+				Infinity: 0.85,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
+2023-2024"`,
+			notice: 'There are not income tax, only social security taxes',
+		}
+	},
+	Slovenia: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+		const tax = progressiveTax(
+			{
+				9210.26: 0.16,
+				27089: 0.26,
+				54178: 0.33,
+				78016.32: 0.39,
+				Infinity: 0.5,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/slovenia/individual/taxes-on-personal-income',
+			notice:
+				'There are types of income taxes. Capital gains, interest, dividends, and rental income are taxed at a flat rate of 25%',
+		}
+	},
 	// Resident/Non-resident
 	Finland: (profile, exchangeRates) => {
 		const exchangeRateEUR = exchangeRates['EUR']
@@ -2486,7 +3083,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/slovak-republic/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Czechia: (profile, exchangeRates) => {
@@ -2510,8 +3107,37 @@ export const countries: TaxStrategies = {
 			notice: 'There are types of income taxes',
 		}
 	},
-	Eritrea: defaultTaxStrategy,
-	Japan: defaultTaxStrategy,
+	Eritrea: () => defaultTaxStrategy('No information'),
+	// Resident/Non-resident
+	Japan: (profile, exchangeRates) => {
+		const exchangeRateJPY = exchangeRates['JPY']
+		if (!exchangeRateJPY) {
+			console.error('Exchange rate for JPY is not available.')
+			return defaultTaxStrategy('Exchange rate for JPY is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateJPY
+		const tax = progressiveTax(
+			{
+				1950000: 0.05,
+				3300000: 0.1,
+				6950000: 0.2,
+				9000000: 0.23,
+				18000000: 0.33,
+				40000000: 0.4,
+				Infinity: 0.45,
+			},
+			localCurrencyIncome
+		)
+		const surTax = localCurrencyIncome * 0.021
+		const localTax = localCurrencyIncome * 0.1
+		const totalTax = tax + surTax + localTax
+
+		return {
+			percentage: totalTax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/japan/individual/taxes-on-personal-income',
+			notice: 'Plus JPY 5,000 for municipal tax',
+		}
+	},
 	Paraguay: (profile, exchangeRates) => {
 		const exchangeRatePYG = exchangeRates['PYG']
 		if (!exchangeRatePYG) {
@@ -2531,22 +3157,202 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/paraguay/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
-	Yemen: defaultTaxStrategy,
-	'Saudi Arabia': defaultTaxStrategy,
-	Antarctica: defaultTaxStrategy,
-	'N. Cyprus': defaultTaxStrategy,
-	Cyprus: defaultTaxStrategy,
-	Morocco: defaultTaxStrategy,
-	Egypt: defaultTaxStrategy,
-	Libya: defaultTaxStrategy,
-	Ethiopia: defaultTaxStrategy,
-	Djibouti: defaultTaxStrategy,
-	Somaliland: defaultTaxStrategy,
-	Uganda: defaultTaxStrategy,
-	Rwanda: defaultTaxStrategy,
+	Yemen: () => defaultTaxStrategy('No information'),
+	// Resident/Non-resident
+	'Saudi Arabia': () => {
+		const tax = 0
+		return {
+			percentage: tax,
+			link: 'https://taxsummaries.pwc.com/saudi-arabia/individual/taxes-on-personal-income',
+			notice:
+				'There is no individual income tax scheme in Saudi Arabia. But there are types of income taxes',
+		}
+	},
+	Antarctica: () => defaultTaxStrategy('No information'),
+	'N. Cyprus': () => defaultTaxStrategy('No information'),
+	Cyprus: (profile, exchangeRates) => {
+		const exchangeRateEUR = exchangeRates['EUR']
+		if (!exchangeRateEUR) {
+			console.error('Exchange rate for EUR is not available.')
+			return defaultTaxStrategy('Exchange rate for EUR is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEUR
+		const tax = progressiveTax(
+			{
+				19500: 0,
+				28000: 0.2,
+				36300: 0.25,
+				60000: 0.3,
+				Infinity: 0.35,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/cyprus/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	Morocco: (profile, exchangeRates) => {
+		const exchangeRateMAD = exchangeRates['MAD']
+		if (!exchangeRateMAD) {
+			console.error('Exchange rate for MAD is not available.')
+			return defaultTaxStrategy('Exchange rate for MAD is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateMAD
+		const tax = progressiveTax(
+			{
+				30000: 0,
+				50000: 0.1,
+				60000: 0.2,
+				80000: 0.3,
+				180000: 0.34,
+				Infinity: 0.38,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/morocco/individual/taxes-on-personal-income',
+		}
+	},
+	// Resident/Non-resident
+	Egypt: (profile, exchangeRates) => {
+		const exchangeRateEGP = exchangeRates['EGP']
+		if (!exchangeRateEGP) {
+			console.error('Exchange rate for EGP is not available.')
+			return defaultTaxStrategy('Exchange rate for EGP is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateEGP
+		const tax = progressiveTax(
+			{
+				40000: 0,
+				55000: 0.1,
+				70000: 0.15,
+				200000: 0.2,
+				400000: 0.225,
+				1200000: 0.25,
+				Infinity: 0.275,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/egypt/individual/taxes-on-personal-income',
+		}
+	},
+	Libya: (profile, exchangeRates) => {
+		const exchangeRateLYD = exchangeRates['LYD']
+		if (!exchangeRateLYD) {
+			console.error('Exchange rate for LYD is not available.')
+			return defaultTaxStrategy('Exchange rate for LYD is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateLYD
+		const tax = progressiveTax(
+			{
+				12000: 0.05,
+				Infinity: 0.1,
+			},
+			localCurrencyIncome
+		)
+		const jehadTax = progressiveTax(
+			{
+				600: 0.01,
+				1200: 0.02,
+				Infinity: 0.03,
+			},
+			localCurrencyIncome
+		)
+
+		const totalTax = tax + jehadTax
+
+		return {
+			percentage: totalTax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/libya/individual/taxes-on-personal-income',
+			notice: 'Palestinian nationals are subject to an additional 7% tax on income.',
+		}
+	},
+	Ethiopia: (profile, exchangeRates) => {
+		const exchangeRateETB = exchangeRates['ETB']
+		if (!exchangeRateETB) {
+			console.error('Exchange rate for ETB is not available.')
+			return defaultTaxStrategy('Exchange rate for ETB is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateETB
+		const tax = progressiveTax(
+			{
+				600: 0,
+				1650: 0.1,
+				3200: 0.15,
+				5250: 0.2,
+				7800: 0.25,
+				10900: 0.3,
+				Infinity: 0.35,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/ethiopia/individual/taxes-on-personal-income',
+		}
+	},
+	Djibouti: () => defaultTaxStrategy('No information'),
+	Somaliland: () => defaultTaxStrategy('No information'),
+	// Resident/Non-resident
+	Uganda: (profile, exchangeRates) => {
+		const exchangeRateUGX = exchangeRates['UGX']
+		if (!exchangeRateUGX) {
+			console.error('Exchange rate for UGX is not available.')
+			return defaultTaxStrategy('Exchange rate for UGX is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateUGX
+		const tax = progressiveTax(
+			{
+				2820000: 0,
+				4020000: 0.1,
+				4920000: 0.2,
+				120000000: 0.3,
+				Infinity: 0.4,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/uganda/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	Rwanda: (profile, exchangeRates) => {
+		const exchangeRateRWF = exchangeRates['RWF']
+		if (!exchangeRateRWF) {
+			console.error('Exchange rate for RWF is not available.')
+			return defaultTaxStrategy('Exchange rate for RWF is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateRWF
+		const tax = progressiveTax(
+			{
+				60000: 0,
+				100000: 0.1,
+				200000: 0.2,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/rwanda/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
 	'Bosnia and Herz.': (profile, exchangeRates) => {
 		const exchangeRateBAM = exchangeRates['BAM']
 		if (!exchangeRateBAM) {
@@ -2575,7 +3381,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/north-macedonia/individual/taxes-on-personal-income',
-			notice: 'There are types of income',
+			notice: 'There are types of income taxes',
 		}
 	},
 	Serbia: () => defaultTaxStrategy('Depends on the type of income'),
@@ -2598,7 +3404,7 @@ export const countries: TaxStrategies = {
 		return {
 			percentage: tax / localCurrencyIncome,
 			link: 'https://taxsummaries.pwc.com/montenegro/individual/taxes-on-personal-income',
-			notice: 'There are types of income: salary or business. Here is only for salary',
+			notice: 'There are types of income taxes: salary or business. Here is only for salary',
 		}
 	},
 	Kosovo: (profile, exchangeRates) => {
@@ -2623,6 +3429,50 @@ export const countries: TaxStrategies = {
 			link: 'https://taxsummaries.pwc.com/kosovo/individual/taxes-on-personal-income',
 		}
 	},
-	'Trinidad and Tobago': defaultTaxStrategy,
-	'S. Sudan': defaultTaxStrategy,
+	'Trinidad and Tobago': (profile, exchangeRates) => {
+		const exchangeRateTTD = exchangeRates['TTD']
+		if (!exchangeRateTTD) {
+			console.error('Exchange rate for TTD is not available.')
+			return defaultTaxStrategy('Exchange rate for TTD is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateTTD
+		const tax = progressiveTax(
+			{
+				1000000: 0.25,
+				Infinity: 0.3,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: 'https://taxsummaries.pwc.com/trinidad-and-tobago/individual/taxes-on-personal-income',
+			notice: 'There are types of income taxes',
+		}
+	},
+	'S. Sudan': (profile, exchangeRates) => {
+		const exchangeRateSSP = exchangeRates['SSP']
+		if (!exchangeRateSSP) {
+			console.error('Exchange rate for SSP is not available.')
+			return defaultTaxStrategy('Exchange rate for SSP is not available.')
+		}
+		const localCurrencyIncome = profile.incomeUSD * exchangeRateSSP
+		const tax = progressiveTax(
+			{
+				60000: 0,
+				120000: 0.05,
+				180000: 0.1,
+				240000: 0.15,
+				Infinity: 0.2,
+			},
+			localCurrencyIncome
+		)
+
+		return {
+			percentage: tax / localCurrencyIncome,
+			link: `Information taken from "Worldwide Personal Tax and Immigration Guide
+			2023-2024"`,
+			notice: 'There are types of income taxes',
+		}
+	},
 }
