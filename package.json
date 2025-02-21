@@ -1,0 +1,26 @@
+{
+	"name": "tax-map",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"license": "MIT",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"format": "prettier --write .",
+		"test": "vitest"
+	},
+	"devDependencies": {
+		"@types/d3": "^7.4.3",
+		"@types/topojson-client": "^3.1.4",
+		"prettier": "^3.3.3",
+		"typescript": "^5.2.2",
+		"vite": "^5.3.1",
+		"vitest": "^2.0.3"
+	},
+	"dependencies": {
+		"d3": "^7.9.0",
+		"topojson-client": "^3.1.0"
+	}
+}
